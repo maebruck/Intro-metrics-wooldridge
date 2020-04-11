@@ -1,0 +1,65 @@
+---
+title: "Wooldridge Computer Exercise Ch16.C1"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+fontsize: 12pt
+header-includes:
+ - \setmainfont{Adobe Garamond Pro}
+ - \setmonofont[Scale=MatchLowercase]{Source Code Pro}
+ - \setsansfont[Scale=MatchLowercase]{Myriad Pro}
+---
+
+
+```{r}
+library(wooldridge)
+data("smoke")
+head(smoke)
+```
+## i)
+$\beta_1$ is the change in $\log(\texttt{income})$ for an increase of one cigarette a day.
+
+## ii) 
+We would expect a decrease in consumption for an increase in cigarette prices, therefore $\gamma_5<0$, and we would also expect cigarette consumption to decrease if there is a ban on smoking in restaurants, $\gamma_6<0$. 
+
+## iii) 
+If $\gamma_5\neq 0 and \gamma_6\neq 0$.
+
+## iv) 
+```{r}
+olsinc <- lm(log(income)~cigs+educ+age+I(age^2), data=smoke)
+summary(olsinc)
+```
+$\beta_1$ is slightly positive, which means that income slightly increases with an increase in smoking, but it is also not statistically significant.
+
+## v)
+```{r}
+reducedform <- lm(cigs ~ educ+age+I(age^2)+log(cigpric)+restaurn, data=smoke)
+summary(reducedform)
+```
+restaurn is significant, but $\log(cigpric)$ is not. We can still estimate the regression, as we have one IV left. 
+
+## vi)
+```{r}
+smoke$fitcigs <- fitted(reducedform)
+secondstage <- lm(log(income)~fitcigs+educ+age+I(age^2), data=smoke)
+summary(secondstage)
+```
+We now get the expected sign for $\beta_1$.
+
+# Using R functions
+```{r}
+library(AER)
+iv <- ivreg(log(income)~cigs+educ+age+I(age^2)|educ+age+I(age^2)+log(cigpric)+restaurn, data=smoke)
+
+summary(iv,vcov = sandwich, diagnostics = TRUE)
+#se slightly off, but acceptable.
+#--------
+#not really working
+library(systemfit)
+system <- systemfit(formula=list(log(income)~cigs+educ+age+I(age^2),cigs~log(income)+educ+age+I(age^2)+log(cigpric)+restaurn), 
+          inst=~log(cigpric)+restaurn, 
+          method="2SLS",
+          data=smoke)
+summary(system)
+```
