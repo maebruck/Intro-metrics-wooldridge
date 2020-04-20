@@ -3,6 +3,9 @@
 
 ## Implemented:
 
+### Chapter 7
+*7-C7
+
 ### Chapter 16
 * 16-4
 * 16-6
